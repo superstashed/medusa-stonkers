@@ -1,0 +1,18 @@
+{
+    "discord": {
+        "token": "your discord token",
+        "clientId": "your discord bot id",
+        "guildId": "your discord guild id",
+        "presence": {
+            "status": "online",
+            "activity": {
+                "enabled": true,
+                "type": "products"
+            }
+        }
+    },
+    "medusa": {
+        "maxRetries": 3,
+        "baseUrl": "http://localhost:9000"
+    }
+}
