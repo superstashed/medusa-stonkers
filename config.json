@@ -1,10 +1,11 @@
 {
+    "clearConsole": true,
     "discord": {
         "token": "your discord token",
         "clientId": "your discord bot id",
         "guildId": "your discord guild id",
         "presence": {
-            "status": "online",
+            "status": "dnd",
             "activity": {
                 "enabled": true,
                 "type": "products"
