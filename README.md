@@ -14,8 +14,7 @@ Stonkers brings shop owners closer to their customers by providing an integratio
 
 ### Preview
 
-![Demo](https://s5.gifyu.com/images/2022-10-03-16-28-44.md.gif)
-
+![Demo](https://get.sares.cf/images/i5zrq-655105806634582046.gif)
 
 ## Set up Project
 
