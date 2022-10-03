@@ -21,7 +21,7 @@ Stonkers brings shop owners closer to their customers by providing an integratio
 ### Prerequisites
 Before you start with the tutorial make sure you have
 
-- [Node.js](https://nodejs.org/en/) v14 or greater installed on your machine
+- [Node.js](https://nodejs.org/en/) v16.9.0 or greater installed on your machine
 - Medusa fully set up
 
 ### Install Project
