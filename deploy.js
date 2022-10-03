@@ -3,7 +3,7 @@ const { discord } = require('./config.json');
 
 const commands = [
 	new SlashCommandBuilder().setName('ping').setDescription('Replies with bot ping'),
-	new SlashCommandBuilder().setName('product').setDescription('Get product information').addStringOption(option => option.setName('id').setDescription('Product ID').setRequired(true)),
+	new SlashCommandBuilder().setName('product').setDescription('Get product information').addStringOption(option => option.setName('query').setDescription('Search query').setRequired(true)),
 ]
 	.map(command => command.toJSON());
 
