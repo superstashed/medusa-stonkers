@@ -182,19 +182,61 @@ client.on("interactionCreate", async (interaction) => {
       break;
 
     case "account-info":
-      let email = interaction.options.getString("email");
+      let email = interaction.options.getString("e-mail");
       let password = interaction.options.getString("password");
 
-      // log in
       axios
-        .post(`${medusa.baseUrl}/admin/auth`, {
+        .post(`${medusa.baseUrl}/store/auth`, {
           email: email,
           password: password,
         })
         .then((res) => {
-          console.log("i work!"); // i never got this output after 2 hours of testing but it will work i promise :D (i think) (i hope) (i pray) (i beg)
-        });
+          console.log("Received account info from Medusa");
+          let account = res.data.customer;
 
+          let fields = [
+            {
+              name: "First name",
+              value: `${account.first_name}`,
+              inline: true,
+            },
+            {
+              name: "Last name",
+              value: `${account.last_name}`,
+              inline: true,
+            },
+            {
+              name: "E-mail",
+              value: `${account.email}`,
+              inline: true,
+            },
+            {
+              name: "Phone",
+              value: `${account.phone}`,
+              inline: true,
+            },
+            {
+              name: "Orders",
+              value: `${account.orders.length}`,
+              inline: true,
+            },
+            {
+              name: "Billing Country",
+              value: `:flag_${account.billing_address.country_code}:`,
+            }
+          ]
+
+          let unixCreatedAt = Date.parse(account.created_at);
+          let createdAt = new Date(unixCreatedAt);
+
+          let embed = new EmbedBuilder()
+            .setTitle(`Account ID: ${account.id}`)
+            .setDescription(`Account created at ${createdAt.getDate()}.${createdAt.getMonth()}.${createdAt.getFullYear()}`)
+            .setColor(0x00ae86)
+            .addFields(fields);
+
+            interaction.reply({ embeds: [embed], ephemeral: true });
+        });
       break;
   }
 });
