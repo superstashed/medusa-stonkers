@@ -15,5 +15,11 @@
     "medusa": {
         "maxRetries": 3,
         "baseUrl": "http://localhost:9000"
+    },
+    "mysql": {
+        "host": "localhost",
+        "user": "root",
+        "password": "root",
+        "database": "discord"
     }
 }

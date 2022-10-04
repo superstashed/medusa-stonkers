@@ -21,19 +21,22 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("account-info")
-    .setDescription("Returns information stored about you")
-    .addStringOption((option) =>
-      option
-        .setName("e-mail")
-        .setDescription("E-mail associated with the account")
-        .setRequired(true)
-    )
-    .addStringOption((option) =>
+    .setDescription("Returns account information"),
+
+    new SlashCommandBuilder()
+      .setName("login")
+      .setDescription("Link your Storefront account to your Discord account")
+      .addStringOption((option) =>
+        option
+          .setName("e-mail")
+          .setDescription("E-mail associated with the account")
+          .setRequired(true)
+      ).addStringOption((option) =>
       option
         .setName("password")
         .setDescription("Password associated with your account")
         .setRequired(true)
-    ),
+      )
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(discord.token);

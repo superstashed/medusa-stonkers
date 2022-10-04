@@ -12,7 +12,7 @@ Campake - [@penktastal](https://github.com/penktastal)
 
 Stonkers brings shop owners closer to their customers by providing an integration between Discord & Medusajs 
 
-### Preview
+### Preview (OUTDATED CURRENTLY)
 
 ![Demo](https://get.sares.cf/images/96sgw-655105806634582046.gif)
 
@@ -32,15 +32,19 @@ git clone https://github.com/superstashed/medusa-stonkers
 ```
 
 2. Configuration:
-Change "token", "clientId", "guildId" and "baseUrl" to your bot's token, its client id, your guild id and the URL of your Medusa store.
+Change the configuration to your liking.
 
-3. Change directory and install dependencies:
+3. Create a MySQL table with: 
+* column called discord of type BIGINT
+* column called cookie of type TEXT
+
+4. Change directory and install dependencies:
 ```bash
 cd medusa-stonkers
 npm install
 ```
 
-4. Run!
+5. Run!
 ```bash
 node .
 ```

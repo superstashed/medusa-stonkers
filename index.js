@@ -6,12 +6,20 @@ const {
 } = require("discord.js");
 const axios = require("axios");
 
-const { clearConsole, medusa, discord } = require("./config.json");
+const { clearConsole, medusa, discord, mysql } = require("./config.json");
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+const database = require("mysql")
+const connection = database.createPool({
+  host: mysql.host,
+  port: 3306,
+  user: mysql.user,
+  password: mysql.password,
+  database: mysql.database
+})
 client.once("ready", () => {
-  if (clearConsole) console.clear();
+  if (clearConsole) console.clear(); 
 
   console.log("Successfully logged in (Discord)");
   if (discord.presence.activity.enabled) {
@@ -182,6 +190,88 @@ client.on("interactionCreate", async (interaction) => {
       break;
 
     case "account-info":
+      connection.query(
+        `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+        (err, result) => {
+          if (err) throw err;
+          if (result.length < 1) {
+            interaction.reply({
+              content: "You don't have an account linked.",
+              ephemeral: true,
+            });
+          } else {
+            let account = result[0];
+            let axiosCfg = {
+              headers: {
+                Cookie: `connect.sid=${account.cookie}`
+              }
+            };
+
+            function country() {
+              if(!account.billing_address) return ":flag_white:";
+              else return `:flag_${account.billing_address.country_code}:`;              
+            }
+
+            axios
+              .get(`${medusa.baseUrl}/store/auth/`, axiosCfg)
+              .then((res) => {
+                let account = res.data.customer;
+                let fields = [
+                  {
+                    name: "First name",
+                    value: `${account.first_name}`,
+                    inline: true,
+                  },
+                  {
+                    name: "Last name",
+                    value: `${account.last_name}`,
+                    inline: true,
+                  },
+                  {
+                    name: "E-mail",
+                    value: `${account.email}`,
+                    inline: true,
+                  },
+                  {
+                    name: "Phone",
+                    value: `${account.phone}`,
+                    inline: true,
+                  },
+                  {
+                    name: "Orders",
+                    value: `${account.orders.length}`,
+                    inline: true,
+                  },
+                  {
+                    name: "Billing Country",
+                    value: country(),
+                    inline: true,
+                  }
+                ]
+
+                let unixCreatedAt = Date.parse(account.created_at);
+                let createdAt = new Date(unixCreatedAt);
+      
+                let embed = new EmbedBuilder()
+                  .setTitle(`Account ID: ${account.id}`)
+                  .setDescription(`Account created at ${createdAt.getDate()}.${createdAt.getMonth()}.${createdAt.getFullYear()}`)
+                  .setColor(0x00ae86)
+                  .addFields(fields);
+      
+                interaction.reply({ embeds: [embed], ephemeral: true });
+              })
+              .catch((err) => {
+                console.log(err);
+                interaction.reply({
+                  content: "Your cookie might've expired. Please /login again.",
+                  ephemeral: true,
+                });
+              });
+          }
+        });
+    break;
+
+    case "login":
       let email = interaction.options.getString("e-mail");
       let password = interaction.options.getString("password");
 
@@ -191,53 +281,46 @@ client.on("interactionCreate", async (interaction) => {
           password: password,
         })
         .then((res) => {
+
           console.log("Received account info from Medusa");
-          let account = res.data.customer;
-
-          let fields = [
-            {
-              name: "First name",
-              value: `${account.first_name}`,
-              inline: true,
-            },
-            {
-              name: "Last name",
-              value: `${account.last_name}`,
-              inline: true,
-            },
-            {
-              name: "E-mail",
-              value: `${account.email}`,
-              inline: true,
-            },
-            {
-              name: "Phone",
-              value: `${account.phone}`,
-              inline: true,
-            },
-            {
-              name: "Orders",
-              value: `${account.orders.length}`,
-              inline: true,
-            },
-            {
-              name: "Billing Country",
-              value: `:flag_${account.billing_address.country_code}:`,
-            }
-          ]
-
-          let unixCreatedAt = Date.parse(account.created_at);
-          let createdAt = new Date(unixCreatedAt);
+          var cookie = res.headers["set-cookie"][0];
+          var token = cookie.substring(12).split(";")[0];
 
           let embed = new EmbedBuilder()
-            .setTitle(`Account ID: ${account.id}`)
-            .setDescription(`Account created at ${createdAt.getDate()}.${createdAt.getMonth()}.${createdAt.getFullYear()}`)
-            .setColor(0x00ae86)
-            .addFields(fields);
+            .setTitle(`Logged in as ${email}`)
+            .setDescription(`You can now safely use any command that requires authentication until 24 hours from now.`)
+            .setColor(0x00ae86);
 
-            interaction.reply({ embeds: [embed], ephemeral: true });
+          // if the user already exists in the database, update the token
+          connection.query(`SELECT * FROM users WHERE discord = '${interaction.user.id}'`, (err, result) => {
+            if (err) throw err;
+            if (result.length > 0) {
+              connection.query(`UPDATE users SET cookie = '${token}' WHERE discord = '${interaction.user.id}'`, (err, result) => {
+                if (err) throw err;
+              });
+            } else {
+              // if the user doesn't exist in the database, add them
+              connection.query(`INSERT INTO users (discord, cookie) VALUES ('${interaction.user.id}', '${token}')`, (err, result) => {
+                if (err) throw err;
+                console.log("Added one user to the database");
+              });
+            }
+          });
+
+          interaction.reply({ embeds: [embed], ephemeral: true });
+        })
+        .catch((err) => {
+          console.log(err);
+
+          let embed = new EmbedBuilder()
+            .setTitle(`Failed to log in`)
+            .setDescription(`Please check your credentials and try again.`)
+            .setColor(0xff0000);
+
+          interaction.reply({ embeds: [embed], ephemeral: true });
         });
-      break;
+
+    break;
   }
 });
 
