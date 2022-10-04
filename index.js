@@ -64,8 +64,7 @@ client.on("interactionCreate", async (interaction) => {
 
             let embed = new EmbedBuilder()
               .setThumbnail(res.data.product.thumbnail)
-              .setTitle(res.data.product.title)
-              .setDescription(res.data.product.description)
+              .setDescription(`${res.data.product.id}\n\n${res.data.product.description}`)
               .setFooter({
                 text: `${variant.prices[0].amount / 100} ${
                   variant.prices[0].currency_code
@@ -74,7 +73,6 @@ client.on("interactionCreate", async (interaction) => {
               .setColor(0x00ae86);
 
             interaction.reply({
-              content: `Product ID: ${res.data.product.id}`,
               embeds: [embed],
               ephemeral: true,
             });
@@ -99,8 +97,8 @@ client.on("interactionCreate", async (interaction) => {
 
                 let embed = new EmbedBuilder()
                   .setThumbnail(product.thumbnail)
-                  .setTitle(product.title)
-                  .setDescription(product.description)
+                  .setTitle(`${product.title}`)
+                  .setDescription(`${product.id}\n\n${product.description}`)
                   .setFooter({
                     text: `${variant.prices[0].amount / 100} ${
                       variant.prices[0].currency_code
@@ -109,7 +107,6 @@ client.on("interactionCreate", async (interaction) => {
                   .setColor(0x00ae86);
 
                 interaction.reply({
-                  content: `Product ID: ${product.id}`,
                   embeds: [embed],
                   ephemeral: true,
                 });
@@ -121,24 +118,83 @@ client.on("interactionCreate", async (interaction) => {
 
     case "order":
       let orderId = interaction.options.getString("id");
+      if (!orderId.startsWith("order_")) orderId = `order_${orderId}`;
+
       axios.get(`${medusa.baseUrl}/store/orders/${orderId}`).then((res) => {
-        console.log("Received order info from Medusa");
         let order = res.data.order;
+        let currency = res.data.order.currency_code;
+
+        let fields = [
+          {
+            name: "Country",
+            value: `:flag_${order.shipping_address.country_code}:`,
+            inline: true,
+          },
+          {
+            name: "First name",
+            value: `${order.shipping_address.first_name}`,
+            inline: true,
+          },
+          {
+            name: "Last name",
+            value: `${order.shipping_address.last_name}`,
+            inline: true,
+          },
+
+          { name: "Items", value: `${order.items.length}`, inline: true },
+          {
+            name: "Total",
+            value: `${order.total / 100} ${currency}`,
+            inline: true,
+          },
+          {
+            name: "Subtotal",
+            value: `${order.subtotal / 100} ${currency}`,
+            inline: true,
+          },
+          {
+            name: "Discount",
+            value: `${order.discount_total / 100} ${currency}`,
+            inline: true,
+          },
+          {
+            name: "Tax",
+            value: `${order.tax_total / 100} ${currency}`,
+            inline: true,
+          },
+          {
+            name: "Shipping",
+            value: `${order.shipping_total / 100} ${currency}`,
+            inline: true,
+          },
+        ];
+
+        console.log("Received order info from Medusa");
         let embed = new EmbedBuilder()
           .setTitle(`Order ID: ${order.id}`)
-          .setDescription(`Order Status: ${order.status} - Payment: ${order.payment_status}`)
+          .setDescription(
+            `Order Status: ${order.status}\nPayment: ${order.payment_status}`
+          )
           .setColor(0x00ae86)
-          .setFooter({
-            text: `Total: ${order.total / 100} ${order.currency_code}`,
-          })
-          .addField({
-            name: "Items",
-            value: order.items
-              .map((item) => `${item.title} - ${item.quantity}x`)
-              .join("\n"),
-          });
+          .addFields(fields);
         interaction.reply({ embeds: [embed], ephemeral: true });
       });
+      break;
+
+    case "account-info":
+      let email = interaction.options.getString("email");
+      let password = interaction.options.getString("password");
+
+      // log in
+      axios
+        .post(`${medusa.baseUrl}/admin/auth`, {
+          email: email,
+          password: password,
+        })
+        .then((res) => {
+          console.log("i work!"); // i never got this output after 2 hours of testing but it will work i promise :D (i think) (i hope) (i pray) (i beg)
+        });
+
       break;
   }
 });
