@@ -13,10 +13,10 @@ const commands = [
       option.setName("query").setDescription("Search query").setRequired(true)
     ),
   new SlashCommandBuilder()
-    .setName("order")
+    .setName("orders")
     .setDescription("Returns order information")
     .addStringOption((option) =>
-      option.setName("id").setDescription("Order ID").setRequired(true)
+      option.setName("id").setDescription("Order ID")
     ),
 
   new SlashCommandBuilder()
