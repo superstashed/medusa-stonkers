@@ -7,6 +7,10 @@ const commands = [
     .setDescription("Replies with bot ping"),
 
   new SlashCommandBuilder()
+    .setName("create-support-message")
+    .setDescription("Creates a support message"),
+
+  new SlashCommandBuilder()
     .setName("product")
     .setDescription("Returns product information")
     .addStringOption((option) =>

@@ -1,14 +1,17 @@
 const {
   Client,
   GatewayIntentBits,
+  PermissionFlagsBits,
   ActivityType,
   EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
 } = require("discord.js");
 const axios = require("axios");
 
 const { clearConsole, medusa, discord, mysql } = require("./config.json");
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [ GatewayIntentBits.Guilds ] });
 
 const database = require("mysql");
 const connection = database.createPool({
@@ -18,6 +21,7 @@ const connection = database.createPool({
   password: mysql.password,
   database: mysql.database,
 });
+
 client.once("ready", () => {
   if (clearConsole) console.clear();
 
@@ -47,7 +51,65 @@ client.once("ready", () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) {
+    if (interaction.isButton()) {
+      if (interaction.customId == "create-ticket") {
+        if(interaction.guild.channels.cache.find(channel => channel.name === `ticket-${interaction.user.id}`)) {
+          return interaction.reply({
+            content: "You already have a ticket open!",
+            ephemeral: true,
+          });
+        }
+        interaction.guild.channels.create({
+          name: `ticket-${interaction.user.id}`,
+          permissionOverwrites: [
+            {
+              id: interaction.guild.roles.everyone,
+              deny: [PermissionFlagsBits.ViewChannel],
+            },
+            {
+              id: interaction.user.id,
+              allow: [PermissionFlagsBits.ViewChannel],
+            },
+          ],
+        }).then((channel) => {
+          const embed = new EmbedBuilder()
+            .setTitle("New ticket")
+            .setDescription(
+              `Hello ${interaction.user.username}, welcome to your customer support request.`
+            )
+            .setColor("#00ff00")
+            .setTimestamp();
+
+          const row = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setLabel("Close ticket")
+                .setStyle("Danger")
+                .setEmoji("🔒")
+                .setCustomId("close-ticket")
+            )
+
+          channel.send({
+            embeds: [embed],
+            components: [row]
+          });
+          interaction.reply({
+            content: `Successfully created ticket <#${channel.id}>`,
+            ephemeral: true,
+          });
+        });
+      }
+
+      if(interaction.customId == "close-ticket") {
+        interaction.reply('Closing ticket...');
+        setTimeout(() => {
+          interaction.channel.delete();
+        }, 3000);
+      }
+    }
+    return;
+  }
 
   const { commandName } = interaction;
 
@@ -61,13 +123,41 @@ client.on("interactionCreate", async (interaction) => {
       });
       break;
 
+    case "create-support-message":
+      if (interaction.member.permissions.has("ADMINISTRATOR")) {
+        const embed = new EmbedBuilder()
+          .setTitle("Customer Support")
+          .setAuthor({ name: interaction.guild.name })
+          .setDescription(
+            "Create a ticket by clicking on one of the buttons below."
+          )
+          .setColor(0x00ff00);
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("create-ticket")
+            .setLabel("Create Ticket")
+            .setEmoji("🎫")
+            .setStyle("Success")
+        );
+        await interaction.reply({
+          embeds: [embed],
+          components: [row],
+        });
+      }else{
+        interaction.reply({
+          content: "You don't have permission to use this command!",
+          ephemeral: true,
+        });
+      }
+      break;
+
     case "product":
       let query = interaction.options.getString("query");
       if (query.startsWith("prod")) {
         axios
           .get(`${medusa.baseUrl}/store/products/${query}`)
           .then((res) => {
-            console.log("Received product info from Medusa");
             let variant = res.data.product.variants[0];
 
             let embed = new EmbedBuilder()
@@ -101,7 +191,6 @@ client.on("interactionCreate", async (interaction) => {
             let count = 0;
             res.data.products.forEach((product) => {
               if (product.title == query) {
-                console.log("Received product info from Medusa");
                 let variant = product.variants[0];
 
                 let embed = new EmbedBuilder()
@@ -181,67 +270,71 @@ client.on("interactionCreate", async (interaction) => {
             }
           }
         );
-      }else{
+      } else {
         axios
-        .get(`${medusa.baseUrl}/store/orders/${interaction.options.getString("id")}`)
-        .then((res) => {
-          let order = res.data.order;
-          let date = new Date(order.created_at)
+          .get(
+            `${medusa.baseUrl}/store/orders/${interaction.options.getString(
+              "id"
+            )}`
+          )
+          .then((res) => {
+            let order = res.data.order;
+            let date = new Date(order.created_at);
 
-          let embed = new EmbedBuilder()
-            .setTitle(`Order ${order.id}`)
-            .setDescription(
-              `Status: ${order.status}\n${order.items
-                .map((item) => {
-                  return `**${item.title}** - ${item.quantity}x\n`;
-                })
-                .join("")}`
-            )
-            .addFields(
-              {
-                name: "Order ID",
-                value: order.id,
-                inline: true,
-              },
-              {
-                name: "Purchase date",
-                value: `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`,
-                inline: true,
-              },
-              {
-                name: "Shipping address",
-                value: `${order.shipping_address.address_1} ${order.shipping_address.address_2} ${order.shipping_address.postal_code}\n${order.shipping_address.city} :flag_${order.shipping_address.country_code}:`,
-                inline: true,
-              },
-              {
-                name: "Subtotal",
-                value: `${order.subtotal / 100} ${order.currency_code}`,
-                inline: true,
-              },
-              {
-                name: "Shipping price",
-                value: `${order.shipping_price / 100} ${order.currency_code}`,
-                inline: true,
-              },
-              {
-                name: "Total",
-                value: `${order.total / 100} ${order.currency_code}`,
-                inline: true,
-              }
-            )
-            .setColor(0x00ae86);
+            let embed = new EmbedBuilder()
+              .setTitle(`Order ${order.id}`)
+              .setDescription(
+                `Status: ${order.status}\n${order.items
+                  .map((item) => {
+                    return `**${item.title}** - ${item.quantity}x\n`;
+                  })
+                  .join("")}`
+              )
+              .addFields(
+                {
+                  name: "Order ID",
+                  value: order.id,
+                  inline: true,
+                },
+                {
+                  name: "Purchase date",
+                  value: `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`,
+                  inline: true,
+                },
+                {
+                  name: "Shipping address",
+                  value: `${order.shipping_address.address_1} ${order.shipping_address.address_2} ${order.shipping_address.postal_code}\n${order.shipping_address.city} :flag_${order.shipping_address.country_code}:`,
+                  inline: true,
+                },
+                {
+                  name: "Subtotal",
+                  value: `${order.subtotal / 100} ${order.currency_code}`,
+                  inline: true,
+                },
+                {
+                  name: "Shipping price",
+                  value: `${order.shipping_price / 100} ${order.currency_code}`,
+                  inline: true,
+                },
+                {
+                  name: "Total",
+                  value: `${order.total / 100} ${order.currency_code}`,
+                  inline: true,
+                }
+              )
+              .setColor(0x00ae86);
 
-          interaction.reply({
-            embeds: [embed],
-            ephemeral: true,
+            interaction.reply({
+              embeds: [embed],
+              ephemeral: true,
+            });
+          })
+          .catch((err) => {
+            interaction.reply({
+              content: "That order ID does not exist!",
+              ephemeral: true,
+            });
           });
-        })
-        .catch((err) => {
-          interaction.reply({
-            content: "That order ID does not exist!",
-            ephemeral: true,
-          });
-        });
       }
       break;
 
@@ -312,7 +405,7 @@ client.on("interactionCreate", async (interaction) => {
                       name: "Billing Country",
                       value: country(),
                       inline: true,
-                    },
+                    }
                   );
 
                 interaction.reply({ embeds: [embed], ephemeral: true });
@@ -338,7 +431,6 @@ client.on("interactionCreate", async (interaction) => {
           password: password,
         })
         .then((res) => {
-          console.log("Received account info from Medusa");
           var cookie = res.headers["set-cookie"][0];
           var token = cookie.substring(12).split(";")[0];
 
