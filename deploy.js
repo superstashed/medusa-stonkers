@@ -1,47 +1,21 @@
 const { REST, SlashCommandBuilder, Routes } = require("discord.js");
 const { discord } = require("./config.json");
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName("ping")
-    .setDescription("Replies with bot ping"),
+const commands = [];
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith(".js"));
 
-  new SlashCommandBuilder()
-    .setName("create-support-message")
-    .setDescription("Creates a support message"),
+// Read command files and add them to the client.commands collection
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
+  // Set a new item in the Collection
+  // With the key as the command name and the value as the exported module
+  commands.push(command.data.toJSON());
+}
 
-  new SlashCommandBuilder()
-    .setName("product")
-    .setDescription("Returns product information")
-    .addStringOption((option) =>
-      option.setName("query").setDescription("Search query").setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("orders")
-    .setDescription("Returns order information")
-    .addStringOption((option) =>
-      option.setName("id").setDescription("Order ID")
-    ),
-
-  new SlashCommandBuilder()
-    .setName("account-info")
-    .setDescription("Returns account information"),
-
-    new SlashCommandBuilder()
-      .setName("login")
-      .setDescription("Link your Storefront account to your Discord account")
-      .addStringOption((option) =>
-        option
-          .setName("e-mail")
-          .setDescription("E-mail associated with the account")
-          .setRequired(true)
-      ).addStringOption((option) =>
-      option
-        .setName("password")
-        .setDescription("Password associated with your account")
-        .setRequired(true)
-      )
-].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(discord.token);
 
