@@ -11,7 +11,7 @@ const axios = require("axios");
 
 const { clearConsole, medusa, discord, mysql } = require("./config.json");
 
-const client = new Client({ intents: [ GatewayIntentBits.Guilds ] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const database = require("mysql");
 const connection = database.createPool({
@@ -54,58 +54,83 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) {
     if (interaction.isButton()) {
       if (interaction.customId == "create-ticket") {
-        if(interaction.guild.channels.cache.find(channel => channel.name === `ticket-${interaction.user.id}`)) {
+        if (
+          interaction.guild.channels.cache.find(
+            (channel) => channel.name === `ticket-${interaction.user.id}`
+          )
+        ) {
           return interaction.reply({
             content: "You already have a ticket open!",
             ephemeral: true,
           });
         }
-        interaction.guild.channels.create({
-          name: `ticket-${interaction.user.id}`,
-          permissionOverwrites: [
-            {
-              id: interaction.guild.roles.everyone,
-              deny: [PermissionFlagsBits.ViewChannel],
-            },
-            {
-              id: interaction.user.id,
-              allow: [PermissionFlagsBits.ViewChannel],
-            },
-          ],
-        }).then((channel) => {
-          const embed = new EmbedBuilder()
-            .setTitle("New ticket")
-            .setDescription(
-              `Hello ${interaction.user.username}, welcome to your customer support request.`
-            )
-            .setColor("#00ff00")
-            .setTimestamp();
+        interaction.guild.channels
+          .create({
+            name: `ticket-${interaction.user.id}`,
+            permissionOverwrites: [
+              {
+                id: interaction.guild.roles.everyone,
+                deny: [PermissionFlagsBits.ViewChannel],
+              },
+              {
+                id: interaction.user.id,
+                allow: [PermissionFlagsBits.ViewChannel],
+              },
+            ],
+          })
+          .then((channel) => {
+            const embed = new EmbedBuilder()
+              .setTitle("New ticket")
+              .setDescription(
+                `Hello ${interaction.user.username}, welcome to your customer support request.`
+              )
+              .setColor("#00ff00")
+              .setTimestamp();
 
-          const row = new ActionRowBuilder()
-            .addComponents(
+            const row = new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setLabel("Close ticket")
                 .setStyle("Danger")
                 .setEmoji("🔒")
                 .setCustomId("close-ticket")
-            )
+            );
 
-          channel.send({
-            embeds: [embed],
-            components: [row]
+            channel.send({
+              embeds: [embed],
+              components: [row],
+            });
+            interaction.reply({
+              content: `Successfully created ticket <#${channel.id}>`,
+              ephemeral: true,
+            });
           });
-          interaction.reply({
-            content: `Successfully created ticket <#${channel.id}>`,
-            ephemeral: true,
-          });
-        });
       }
 
-      if(interaction.customId == "close-ticket") {
-        interaction.reply('Closing ticket...');
+      if (interaction.customId == "close-ticket") {
+        if (discord.saveTickets) {
+          interaction.reply("Saving ticket and closing it...");
+          // use fs and store every message in a .txt file
+          let fs = require("fs");
+          let channel = interaction.channel;
+          let messages = await channel.messages.fetch({ cache: false });
+          let text = "";
+          messages.forEach((message) => {
+            text += `${message.author.username}: ${message.content}\n`;
+          });
+          fs.writeFile(
+            `./tickets/${channel.name}.${Math.random() * 1000}.txt`,
+            text,
+            function (err) {
+              if (err) throw err;
+              interaction.editReply("Saved ticket!");
+            }
+          );
+        } else {
+          interaction.reply("Closing ticket...");
+        }
         setTimeout(() => {
           interaction.channel.delete();
-        }, 3000);
+        }, 10000);
       }
     }
     return;
@@ -144,7 +169,7 @@ client.on("interactionCreate", async (interaction) => {
           embeds: [embed],
           components: [row],
         });
-      }else{
+      } else {
         interaction.reply({
           content: "You don't have permission to use this command!",
           ephemeral: true,

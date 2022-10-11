@@ -53,3 +53,6 @@ node .
 - [Medusa’s GitHub repository](https://github.com/medusajs/medusa)
 - [Medusa Documentation](https://docs.medusajs.com/)
 - [Discord.js' Documentation](https://discord.js.org/#/docs/discord.js/main/general/welcome)
+
+## Notes
+- If you'd like to save tickets (change it in config.json) make sure you have enabled the "Message Content" Intent in your Discord Developer Portal under the "Bot" category

@@ -10,7 +10,8 @@
                 "enabled": true,
                 "type": "products"
             }
-        }
+        },
+        "saveTickets": true
     },
     "medusa": {
         "maxRetries": 3,
