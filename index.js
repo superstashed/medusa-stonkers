@@ -79,30 +79,80 @@ client.on("interactionCreate", async (interaction) => {
             ],
           })
           .then((channel) => {
-            const embed = new EmbedBuilder()
-              .setTitle("New ticket")
-              .setDescription(
-                `Hello ${interaction.user.username}, welcome to your customer support request.`
-              )
-              .setColor("#00ff00")
-              .setTimestamp();
+            connection.query(
+              `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+              (err, result) => {
+                if (err) throw err;
+                if (result.length == 0) {
+                  return interaction.reply({
+                    content: "You are not registered!",
+                    ephemeral: true,
+                  });
+                }
+                let account = result[0];
+                axios
+                  .get(`${medusa.baseUrl}/store/auth`, {
+                    headers: {
+                      Cookie: `connect.sid=${account.cookie}`,
+                    },
+                  })
+                  .then((res) => {
+                    const customer = res.data.customer;
 
-            const row = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setLabel("Close ticket")
-                .setStyle("Danger")
-                .setEmoji("🔒")
-                .setCustomId("close-ticket")
+                    const embed = new EmbedBuilder()
+                      .setTitle("New ticket")
+                      .setDescription(
+                        `Hello ${interaction.user.username}, welcome to your customer support request.`
+                      )
+                      .addFields(
+                        {
+                          name: "First name",
+                          value: `${customer.first_name}`,
+                          inline: true,
+                        },
+                        {
+                          name: "Last name",
+                          value: `${customer.last_name}`,
+                          inline: true,
+                        },
+                        {
+                          name: "E-mail",
+                          value: `${customer.email}`,
+                          inline: true,
+                        }
+                      )
+                      .setColor("#00ff00")
+                      .setTimestamp();
+
+                    const row = new ActionRowBuilder().addComponents(
+                      new ButtonBuilder()
+                        .setLabel("Close ticket")
+                        .setStyle("Danger")
+                        .setEmoji("🔒")
+                        .setCustomId("close-ticket")
+                    );
+
+                    channel.send({
+                      embeds: [embed],
+                      components: [row],
+                    });
+
+                    interaction.reply({
+                      content: `Successfully created ticket <#${channel.id}>`,
+                      ephemeral: true,
+                    });
+                  })
+                  .catch((err) => {
+                    console.error(err);
+                    interaction.reply({
+                      content:
+                        "Your cookie might've expired. Please /login again.",
+                      ephemeral: true,
+                    });
+                    channel.delete();
+                  });
+              }
             );
-
-            channel.send({
-              embeds: [embed],
-              components: [row],
-            });
-            interaction.reply({
-              content: `Successfully created ticket <#${channel.id}>`,
-              ephemeral: true,
-            });
           });
       }
 
@@ -114,17 +164,17 @@ client.on("interactionCreate", async (interaction) => {
           let channel = interaction.channel;
           let messages = await channel.messages.fetch({ cache: false });
           let text = "";
-          let template = fs.readFile("./tickets/template.html", (err, data) => {
-            if (err) throw err;
-            text = data;
-          })
           messages.forEach((message) => {
             text += `<h1>${message.author.username}#${message.author.discriminator}</h1><p>${message.content}</p>`;
           });
-          fs.writeFile(`./tickets/${interaction.user.id}-${Math.random() * 1000}.html`, `${text} + <style>body{background-color: #1a1a1c;font-family: Arial, Helvetica, sans-serif;color: white;}h1{font-size: x-large;margin-left: 5%;}p{margin-left: 7%;}</style>`, (err) => {
-            if (err) throw err;
-            console.log("Saved ticket");
-          });
+          fs.writeFile(
+            `./tickets/${interaction.user.id}-${Math.random() * 1000}.html`,
+            `${text} + <style>body{background-color: #1a1a1c;font-family: Arial, Helvetica, sans-serif;color: white;}h1{font-size: x-large;margin-left: 5%;}p{margin-left: 7%;}</style>`,
+            (err) => {
+              if (err) throw err;
+              console.log("Saved ticket");
+            }
+          );
         } else {
           interaction.reply("Closing ticket...");
         }
@@ -242,7 +292,7 @@ client.on("interactionCreate", async (interaction) => {
     case "orders":
       if (!interaction.options.getString("id")) {
         connection.query(
-          `SELECT * FROM users WHERE discord = ${interaction.user.id}`,
+          `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
           (err, result) => {
             if (err) throw err;
             if (result.length == 0) {
@@ -365,7 +415,7 @@ client.on("interactionCreate", async (interaction) => {
 
     case "account-info":
       connection.query(
-        `SELECT * FROM users WHERE discord = ${interaction.user.id}`,
+        `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
         (err, result) => {
           if (err) throw err;
           if (result.length < 1) {
