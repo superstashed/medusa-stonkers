@@ -114,17 +114,17 @@ client.on("interactionCreate", async (interaction) => {
           let channel = interaction.channel;
           let messages = await channel.messages.fetch({ cache: false });
           let text = "";
+          let template = fs.readFile("./tickets/template.html", (err, data) => {
+            if (err) throw err;
+            text = data;
+          })
           messages.forEach((message) => {
-            text += `${message.author.username}: ${message.content}\n`;
+            text += `<h1>${message.author.username}#${message.author.discriminator}</h1><p>${message.content}</p>`;
           });
-          fs.writeFile(
-            `./tickets/${channel.name}.${Math.random() * 1000}.txt`,
-            text,
-            function (err) {
-              if (err) throw err;
-              interaction.editReply("Saved ticket!");
-            }
-          );
+          fs.writeFile(`./tickets/${interaction.user.id}-${Math.random() * 1000}.html`, `${text} + <style>body{background-color: #1a1a1c;font-family: Arial, Helvetica, sans-serif;color: white;}h1{font-size: x-large;margin-left: 5%;}p{margin-left: 7%;}</style>`, (err) => {
+            if (err) throw err;
+            console.log("Saved ticket");
+          });
         } else {
           interaction.reply("Closing ticket...");
         }
