@@ -85,7 +85,7 @@ client.on("interactionCreate", async (interaction) => {
                 if (err) throw err;
                 if (result.length == 0) {
                   return interaction.reply({
-                    content: "You are not registered!",
+                    content: "You are not logged in!",
                     ephemeral: true,
                   });
                 }
