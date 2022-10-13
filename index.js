@@ -85,7 +85,7 @@ client.on("interactionCreate", async (interaction) => {
                 if (err) throw err;
                 if (result.length == 0) {
                   return interaction.reply({
-                    content: "You are not logged in!",
+                    content: "You don't have an account linked.",
                     ephemeral: true,
                   });
                 }
@@ -418,7 +418,7 @@ client.on("interactionCreate", async (interaction) => {
         `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
         (err, result) => {
           if (err) throw err;
-          if (result.length < 1) {
+          if (result.length == 1) {
             interaction.reply({
               content: "You don't have an account linked.",
               ephemeral: true,
