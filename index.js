@@ -6,14 +6,19 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-} = require("discord.js");
-const axios = require("axios");
+} = require('discord.js');
+const axios = require('axios');
 
-const { clearConsole, medusa, discord, mysql } = require("./config.json");
+const {
+  clearConsole,
+  medusa,
+  discord,
+  mysql
+} = require('./config.json');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-const database = require("mysql");
+const database = require('mysql');
 const connection = database.createPool({
   host: mysql.host,
   port: 3306,
@@ -22,15 +27,15 @@ const connection = database.createPool({
   database: mysql.database,
 });
 
-client.once("ready", () => {
+client.once('ready', () => {
   if (clearConsole) console.clear();
 
-  console.log("Successfully logged in (Discord)");
+  console.log('Successfully logged in (Discord)');
   if (discord.presence.activity.enabled) {
     axios
       .get(`${medusa.baseUrl}/store/products`)
       .then((res) => {
-        console.log("Received products from Medusa");
+        console.log('Received products from Medusa');
         client.user.setPresence({
           activities: [
             {
@@ -50,17 +55,17 @@ client.once("ready", () => {
   }
 });
 
-client.on("interactionCreate", async (interaction) => {
+client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) {
     if (interaction.isButton()) {
-      if (interaction.customId == "create-ticket") {
+      if (interaction.customId == 'create-ticket') {
         if (
           interaction.guild.channels.cache.find(
             (channel) => channel.name === `ticket-${interaction.user.id}`
           )
         ) {
           return interaction.reply({
-            content: "You already have a ticket open!",
+            content: 'You already have a ticket open!',
             ephemeral: true,
           });
         }
@@ -80,12 +85,14 @@ client.on("interactionCreate", async (interaction) => {
           })
           .then((channel) => {
             connection.query(
-              `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+              `SELECT *
+               FROM users
+               WHERE discord = '${interaction.user.id}'`,
               (err, result) => {
                 if (err) throw err;
                 if (result.length == 0) {
                   return interaction.reply({
-                    content: "You don't have an account linked.",
+                    content: 'You don\'t have an account linked.',
                     ephemeral: true,
                   });
                 }
@@ -100,36 +107,36 @@ client.on("interactionCreate", async (interaction) => {
                     const customer = res.data.customer;
 
                     const embed = new EmbedBuilder()
-                      .setTitle("New ticket")
+                      .setTitle('New ticket')
                       .setDescription(
                         `Hello ${interaction.user.username}, welcome to your customer support request.`
                       )
                       .addFields(
                         {
-                          name: "First name",
+                          name: 'First name',
                           value: `${customer.first_name}`,
                           inline: true,
                         },
                         {
-                          name: "Last name",
+                          name: 'Last name',
                           value: `${customer.last_name}`,
                           inline: true,
                         },
                         {
-                          name: "E-mail",
+                          name: 'E-mail',
                           value: `${customer.email}`,
                           inline: true,
                         }
                       )
-                      .setColor("#00ff00")
+                      .setColor('#00ff00')
                       .setTimestamp();
 
                     const row = new ActionRowBuilder().addComponents(
                       new ButtonBuilder()
-                        .setLabel("Close ticket")
-                        .setStyle("Danger")
-                        .setEmoji("🔒")
-                        .setCustomId("close-ticket")
+                        .setLabel('Close ticket')
+                        .setStyle('Danger')
+                        .setEmoji('🔒')
+                        .setCustomId('close-ticket')
                     );
 
                     channel.send({
@@ -146,7 +153,7 @@ client.on("interactionCreate", async (interaction) => {
                     console.error(err);
                     interaction.reply({
                       content:
-                        "Your cookie might've expired. Please /login again.",
+                        'Your cookie might\'ve expired. Please /login again.',
                       ephemeral: true,
                     });
                     channel.delete();
@@ -156,14 +163,14 @@ client.on("interactionCreate", async (interaction) => {
           });
       }
 
-      if (interaction.customId == "close-ticket") {
+      if (interaction.customId == 'close-ticket') {
         if (discord.saveTickets) {
-          interaction.reply("Saving ticket and closing it...");
+          interaction.reply('Saving ticket and closing it...');
           // use fs and store every message in a .txt file
-          let fs = require("fs");
+          let fs = require('fs');
           let channel = interaction.channel;
           let messages = await channel.messages.fetch({ cache: false });
-          let text = "";
+          let text = '';
           messages.forEach((message) => {
             text += `<h1>${message.author.username}#${message.author.discriminator}</h1><p>${message.content}</p>`;
           });
@@ -172,11 +179,11 @@ client.on("interactionCreate", async (interaction) => {
             `${text} + <style>body{background-color: #1a1a1c;font-family: Arial, Helvetica, sans-serif;color: white;}h1{font-size: x-large;margin-left: 5%;}p{margin-left: 7%;}</style>`,
             (err) => {
               if (err) throw err;
-              console.log("Saved ticket");
+              console.log('Saved ticket');
             }
           );
         } else {
-          interaction.reply("Closing ticket...");
+          interaction.reply('Closing ticket...');
         }
         setTimeout(() => {
           interaction.channel.delete();
@@ -189,7 +196,7 @@ client.on("interactionCreate", async (interaction) => {
   const { commandName } = interaction;
 
   switch (commandName) {
-    case "ping":
+    case 'ping':
       await interaction.reply({
         content: `🏓Latency is ***${Math.abs(
           Date.now() - interaction.createdTimestamp
@@ -198,22 +205,22 @@ client.on("interactionCreate", async (interaction) => {
       });
       break;
 
-    case "create-support-message":
-      if (interaction.member.permissions.has("ADMINISTRATOR")) {
+    case 'create-support-message':
+      if (interaction.member.permissions.has('ADMINISTRATOR')) {
         const embed = new EmbedBuilder()
-          .setTitle("Customer Support")
+          .setTitle('Customer Support')
           .setAuthor({ name: interaction.guild.name })
           .setDescription(
-            "Create a ticket by clicking on one of the buttons below."
+            'Create a ticket by clicking on one of the buttons below.'
           )
           .setColor(0x00ff00);
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("create-ticket")
-            .setLabel("Create Ticket")
-            .setEmoji("🎫")
-            .setStyle("Success")
+            .setCustomId('create-ticket')
+            .setLabel('Create Ticket')
+            .setEmoji('🎫')
+            .setStyle('Success')
         );
         await interaction.reply({
           embeds: [embed],
@@ -221,15 +228,15 @@ client.on("interactionCreate", async (interaction) => {
         });
       } else {
         interaction.reply({
-          content: "You don't have permission to use this command!",
+          content: 'You don\'t have permission to use this command!',
           ephemeral: true,
         });
       }
       break;
 
-    case "product":
-      let query = interaction.options.getString("query");
-      if (query.startsWith("prod")) {
+    case 'product':
+      let query = interaction.options.getString('query');
+      if (query.startsWith('prod')) {
         axios
           .get(`${medusa.baseUrl}/store/products/${query}`)
           .then((res) => {
@@ -254,7 +261,7 @@ client.on("interactionCreate", async (interaction) => {
           })
           .catch((err) => {
             interaction.reply({
-              content: "I have encountered an error.",
+              content: 'I have encountered an error.',
               ephemeral: true,
             });
           });
@@ -289,15 +296,17 @@ client.on("interactionCreate", async (interaction) => {
       }
       break;
 
-    case "orders":
-      if (!interaction.options.getString("id")) {
+    case 'orders':
+      if (!interaction.options.getString('id')) {
         connection.query(
-          `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+          `SELECT *
+           FROM users
+           WHERE discord = '${interaction.user.id}'`,
           (err, result) => {
             if (err) throw err;
             if (result.length == 0) {
               interaction.reply({
-                content: "You don't have an account linked.",
+                content: 'You don\'t have an account linked.',
                 ephemeral: true,
               });
             } else {
@@ -314,18 +323,18 @@ client.on("interactionCreate", async (interaction) => {
                   let orders = res.data.customer.orders;
                   if (!orders) {
                     interaction.reply({
-                      content: "You have no orders.",
+                      content: 'You have no orders.',
                       ephemeral: true,
                     });
                   } else {
                     let embed = new EmbedBuilder()
-                      .setTitle("Your Orders")
+                      .setTitle('Your Orders')
                       .setDescription(
                         `You have ${orders.length} orders.\n\n${orders
                           .map((order) => {
                             return `**${order.id}** - ${order.status}\n`;
                           })
-                          .join("")}`
+                          .join('')}`
                       )
                       .setColor(0x00ae86);
 
@@ -338,7 +347,7 @@ client.on("interactionCreate", async (interaction) => {
                 .catch((err) => {
                   interaction.reply({
                     content:
-                      "Your cookie might've expired. Please /login again.",
+                      'Your cookie might\'ve expired. Please /login again.',
                     ephemeral: true,
                   });
                 });
@@ -349,7 +358,7 @@ client.on("interactionCreate", async (interaction) => {
         axios
           .get(
             `${medusa.baseUrl}/store/orders/${interaction.options.getString(
-              "id"
+              'id'
             )}`
           )
           .then((res) => {
@@ -363,36 +372,36 @@ client.on("interactionCreate", async (interaction) => {
                   .map((item) => {
                     return `**${item.title}** - ${item.quantity}x\n`;
                   })
-                  .join("")}`
+                  .join('')}`
               )
               .addFields(
                 {
-                  name: "Order ID",
+                  name: 'Order ID',
                   value: order.id,
                   inline: true,
                 },
                 {
-                  name: "Purchase date",
+                  name: 'Purchase date',
                   value: `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`,
                   inline: true,
                 },
                 {
-                  name: "Shipping address",
+                  name: 'Shipping address',
                   value: `${order.shipping_address.address_1} ${order.shipping_address.address_2} ${order.shipping_address.postal_code}\n${order.shipping_address.city} :flag_${order.shipping_address.country_code}:`,
                   inline: true,
                 },
                 {
-                  name: "Subtotal",
+                  name: 'Subtotal',
                   value: `${order.subtotal / 100} ${order.currency_code}`,
                   inline: true,
                 },
                 {
-                  name: "Shipping price",
+                  name: 'Shipping price',
                   value: `${order.shipping_price / 100} ${order.currency_code}`,
                   inline: true,
                 },
                 {
-                  name: "Total",
+                  name: 'Total',
                   value: `${order.total / 100} ${order.currency_code}`,
                   inline: true,
                 }
@@ -406,21 +415,23 @@ client.on("interactionCreate", async (interaction) => {
           })
           .catch((err) => {
             interaction.reply({
-              content: "That order ID does not exist!",
+              content: 'That order ID does not exist!',
               ephemeral: true,
             });
           });
       }
       break;
 
-    case "account-info":
+    case 'account-info':
       connection.query(
-        `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+        `SELECT *
+         FROM users
+         WHERE discord = '${interaction.user.id}'`,
         (err, result) => {
           if (err) throw err;
           if (result.length == 1) {
             interaction.reply({
-              content: "You don't have an account linked.",
+              content: 'You don\'t have an account linked.',
               ephemeral: true,
             });
           } else {
@@ -432,8 +443,11 @@ client.on("interactionCreate", async (interaction) => {
             };
 
             function country() {
-              if (!account.billing_address) return ":flag_white:";
-              else return `:flag_${account.billing_address.country_code}:`;
+              if (!account.billing_address) {
+                return ':flag_white:';
+              } else {
+                return `:flag_${account.billing_address.country_code}:`;
+              }
             }
 
             axios
@@ -452,42 +466,45 @@ client.on("interactionCreate", async (interaction) => {
                   .setColor(0x00ae86)
                   .addFields(
                     {
-                      name: "First name",
+                      name: 'First name',
                       value: `${account.first_name}`,
                       inline: true,
                     },
                     {
-                      name: "Last name",
+                      name: 'Last name',
                       value: `${account.last_name}`,
                       inline: true,
                     },
                     {
-                      name: "E-mail",
+                      name: 'E-mail',
                       value: `${account.email}`,
                       inline: true,
                     },
                     {
-                      name: "Phone",
+                      name: 'Phone',
                       value: `${account.phone}`,
                       inline: true,
                     },
                     {
-                      name: "Orders",
+                      name: 'Orders',
                       value: `${account.orders.length}`,
                       inline: true,
                     },
                     {
-                      name: "Billing Country",
+                      name: 'Billing Country',
                       value: country(),
                       inline: true,
                     }
                   );
 
-                interaction.reply({ embeds: [embed], ephemeral: true });
+                interaction.reply({
+                  embeds: [embed],
+                  ephemeral: true
+                });
               })
               .catch((err) => {
                 interaction.reply({
-                  content: "Your cookie might've expired. Please /login again.",
+                  content: 'Your cookie might\'ve expired. Please /login again.',
                   ephemeral: true,
                 });
               });
@@ -496,9 +513,9 @@ client.on("interactionCreate", async (interaction) => {
       );
       break;
 
-    case "login":
-      let email = interaction.options.getString("e-mail");
-      let password = interaction.options.getString("password");
+    case 'login':
+      let email = interaction.options.getString('e-mail');
+      let password = interaction.options.getString('password');
 
       axios
         .post(`${medusa.baseUrl}/store/auth`, {
@@ -506,8 +523,9 @@ client.on("interactionCreate", async (interaction) => {
           password: password,
         })
         .then((res) => {
-          var cookie = res.headers["set-cookie"][0];
-          var token = cookie.substring(12).split(";")[0];
+          var cookie = res.headers['set-cookie'][0];
+          var token = cookie.substring(12)
+            .split(';')[0];
 
           let embed = new EmbedBuilder()
             .setTitle(`Logged in as ${email}`)
@@ -518,12 +536,16 @@ client.on("interactionCreate", async (interaction) => {
 
           // if the user already exists in the database, update the token
           connection.query(
-            `SELECT * FROM users WHERE discord = '${interaction.user.id}'`,
+            `SELECT *
+             FROM users
+             WHERE discord = '${interaction.user.id}'`,
             (err, result) => {
               if (err) throw err;
               if (result.length > 0) {
                 connection.query(
-                  `UPDATE users SET cookie = '${token}' WHERE discord = '${interaction.user.id}'`,
+                  `UPDATE users
+                   SET cookie = '${token}'
+                   WHERE discord = '${interaction.user.id}'`,
                   (err, result) => {
                     if (err) throw err;
                   }
@@ -531,17 +553,21 @@ client.on("interactionCreate", async (interaction) => {
               } else {
                 // if the user doesn't exist in the database, add them
                 connection.query(
-                  `INSERT INTO users (discord, cookie) VALUES ('${interaction.user.id}', '${token}')`,
+                  `INSERT INTO users (discord, cookie)
+                   VALUES ('${interaction.user.id}', '${token}')`,
                   (err, result) => {
                     if (err) throw err;
-                    console.log("Added one user to the database");
+                    console.log('Added one user to the database');
                   }
                 );
               }
             }
           );
 
-          interaction.reply({ embeds: [embed], ephemeral: true });
+          interaction.reply({
+            embeds: [embed],
+            ephemeral: true
+          });
         })
         .catch((err) => {
           let embed = new EmbedBuilder()
@@ -549,7 +575,10 @@ client.on("interactionCreate", async (interaction) => {
             .setDescription(`Please check your credentials and try again.`)
             .setColor(0xff0000);
 
-          interaction.reply({ embeds: [embed], ephemeral: true });
+          interaction.reply({
+            embeds: [embed],
+            ephemeral: true
+          });
         });
 
       break;
