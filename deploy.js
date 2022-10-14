@@ -14,7 +14,7 @@ const commands = [
   .setName("product")
   .setDescription("Returns product information")
   .addStringOption((option) =>
-  option.setName("query").setDescription("Search query").setRequired(true)
+  option.setName("query").setDescription("Search query")
   ),
 
   new SlashCommandBuilder()
