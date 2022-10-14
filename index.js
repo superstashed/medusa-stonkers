@@ -236,63 +236,71 @@ client.on('interactionCreate', async (interaction) => {
 
     case 'product':
       let query = interaction.options.getString('query');
-      if (query.startsWith('prod')) {
-        axios
-          .get(`${medusa.baseUrl}/store/products/${query}`)
-          .then((res) => {
-            let variant = res.data.product.variants[0];
+      if (!query) {
+          axios
+          .get(`${medusa.baseUrl}/store/products`).then(res => {
 
-            let embed = new EmbedBuilder()
-              .setThumbnail(res.data.product.thumbnail)
-              .setDescription(
-                `${res.data.product.id}\n\n${res.data.product.description}`
-              )
-              .setFooter({
-                text: `${variant.prices[0].amount / 100} ${
-                  variant.prices[0].currency_code
-                }`,
-              })
-              .setColor(0x00ae86);
-
-            interaction.reply({
-              embeds: [embed],
-              ephemeral: true,
-            });
           })
-          .catch((err) => {
-            interaction.reply({
-              content: 'I have encountered an error.',
-              ephemeral: true,
-            });
-          });
-      } else {
-        // i would have used "Search Products", but for some reason that doesn't return any hits so here I am searching for the title instead
-        axios
-          .get(`${medusa.baseUrl}/store/products?title=${query}`)
-          .then((res) => {
-            let count = 0;
-            res.data.products.forEach((product) => {
-              if (product.title == query) {
-                let variant = product.variants[0];
+      }
+      if (query) {
+          if (query.startsWith('prod')) {
+              axios
+              .get(`${medusa.baseUrl}/store/products/${query}`)
+              .then((res) => {
+                  let variant = res.data.product.variants[0];
 
-                let embed = new EmbedBuilder()
-                  .setThumbnail(product.thumbnail)
-                  .setTitle(`${product.title}`)
-                  .setDescription(`${product.id}\n\n${product.description}`)
+                  let embed = new EmbedBuilder()
+                  .setThumbnail(res.data.product.thumbnail)
+                  .setDescription(
+                          `${res.data.product.id}\n\n${res.data.product.description}`
+                          )
                   .setFooter({
-                    text: `${variant.prices[0].amount / 100} ${
-                      variant.prices[0].currency_code
-                    }`,
+                      text: `${variant.prices[0].amount / 100} ${
+                          variant.prices[0].currency_code
+                      }`,
                   })
                   .setColor(0x00ae86);
 
-                interaction.reply({
-                  embeds: [embed],
-                  ephemeral: true,
-                });
-              }
-            });
-          });
+                  interaction.reply({
+                      embeds: [embed],
+                      ephemeral: true,
+                  });
+              })
+              .catch((err) => {
+                  interaction.reply({
+                      content: 'I have encountered an error.',
+                      ephemeral: true,
+                  });
+              });
+          } else {
+              // i would have used "Search Products", but for some reason that doesn't return any hits so here I am searching for the title instead
+              axios
+              .get(`${medusa.baseUrl}/store/products?title=${query}`)
+              .then((res) => {
+                  let count = 0;
+                  res.data.products.forEach((product) => {
+                      if (product.title == query) {
+                          let variant = product.variants[0];
+
+                          let embed = new EmbedBuilder()
+                          .setThumbnail(product.thumbnail)
+                          .setTitle(`${product.title}`)
+                          .setDescription(`${product.id}\n\n${product.description}`)
+                          .setFooter({
+                              text: `${variant.prices[0].amount / 100} ${
+                                  variant.prices[0].currency_code
+                              }`,
+                          })
+                          .setColor(0x00ae86);
+
+                          interaction.reply({
+                              embeds: [embed],
+                              ephemeral: true,
+                          });
+                      }
+                  });
+              });
+          }
       }
       break;
 
