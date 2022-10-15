@@ -167,7 +167,6 @@ client.on('interactionCreate', async (interaction) => {
             if (interaction.customId == 'close-ticket') {
                 if (discord.saveTickets) {
                     interaction.reply('Saving ticket and closing it...');
-                    // use fs and store every message in a .txt file
                     let fs = require('fs');
                     let channel = interaction.channel;
                     let messages = await channel.messages.fetch({cache: false});
@@ -326,7 +325,6 @@ client.on('interactionCreate', async (interaction) => {
                             });
                         });
                 } else {
-                    // i would have used "Search Products", but for some reason that doesn't return any hits so here I am searching for the title instead
                     axios
                         .get(`${medusa.baseUrl}/store/products?title=${query}`)
                         .then((res) => {
