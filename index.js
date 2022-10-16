@@ -200,8 +200,9 @@ client.on('interactionCreate', async (interaction) => {
 
                     let embed = new EmbedBuilder()
                         .setThumbnail(res.data.product.thumbnail)
+                        .setTitle(res.data.product.title)
                         .setDescription(
-                            `${res.data.product.id}\n\n${res.data.product.description}`
+                            `${res.data.product.description}`
                         )
                         .setFooter({
                             text: `${variant.prices[0].amount / 100} ${
@@ -243,8 +244,8 @@ client.on('interactionCreate', async (interaction) => {
                         )
                         .addFields(
                             {
-                                name: 'Order ID',
-                                value: order.id,
+                                name: 'Name',
+                                value: `${order.shipping_address.first_name} ${order.shipping_address.last_name}`,
                                 inline: true,
                             },
                             {
@@ -389,6 +390,11 @@ client.on('interactionCreate', async (interaction) => {
                     axios
                         .get(`${medusa.baseUrl}/store/products?title=${query}`)
                         .then((res) => {
+                            if (!res.data.products[0]) return interaction.reply({
+                                content: 'That product does not exist!',
+                                ephemeral: true,
+                            })
+
                             let count = 0;
                             res.data.products.forEach((product) => {
                                 if (product.title == query) {
@@ -506,8 +512,8 @@ client.on('interactionCreate', async (interaction) => {
                             )
                             .addFields(
                                 {
-                                    name: 'Order ID',
-                                    value: order.id,
+                                    name: 'Name',
+                                    value: `${order.shipping_address.first_name} ${order.shipping_address.last_name}`,
                                     inline: true,
                                 },
                                 {
@@ -559,7 +565,7 @@ client.on('interactionCreate', async (interaction) => {
                  WHERE discord = '${interaction.user.id}'`,
                 (err, result) => {
                     if (err) throw err;
-                    if (result.length == 1) {
+                    if (result.length == 0) {
                         interaction.reply({
                             content: 'You don\'t have an account linked.',
                             ephemeral: true,
