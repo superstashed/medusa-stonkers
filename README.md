@@ -1,3 +1,4 @@
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/5pJ6WI?referralCode=stefa-n)
 ## medusa-stonkers
 ![Medusa Hackathon 2022](https://i.imgur.com/nmkzzB3.jpg)
 
