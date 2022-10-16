@@ -192,34 +192,95 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
     if (interaction.isSelectMenu()) {
-        axios
-            .get(`${medusa.baseUrl}/store/products/${interaction.values[0]}`)
-            .then((res) => {
-                let variant = res.data.product.variants[0];
+        if (interaction.customId.startsWith('prod')) {
+            axios
+                .get(`${medusa.baseUrl}/store/products/${interaction.values[0]}`)
+                .then((res) => {
+                    let variant = res.data.product.variants[0];
 
-                let embed = new EmbedBuilder()
-                    .setThumbnail(res.data.product.thumbnail)
-                    .setDescription(
-                        `${res.data.product.id}\n\n${res.data.product.description}`
-                    )
-                    .setFooter({
-                        text: `${variant.prices[0].amount / 100} ${
-                            variant.prices[0].currency_code
-                        }`
-                    })
-                    .setColor(0x00ae86);
+                    let embed = new EmbedBuilder()
+                        .setThumbnail(res.data.product.thumbnail)
+                        .setDescription(
+                            `${res.data.product.id}\n\n${res.data.product.description}`
+                        )
+                        .setFooter({
+                            text: `${variant.prices[0].amount / 100} ${
+                                variant.prices[0].currency_code
+                            }`
+                        })
+                        .setColor(0x00ae86);
 
-                interaction.reply({
-                    embeds: [embed],
-                    ephemeral: true,
+                    interaction.reply({
+                        embeds: [embed],
+                        ephemeral: true,
+                    });
+                })
+                .catch((err) => {
+                    interaction.reply({
+                        content: 'I have encountered an error.',
+                        ephemeral: true,
+                    });
                 });
-            })
-            .catch((err) => {
-                interaction.reply({
-                    content: 'I have encountered an error.',
-                    ephemeral: true,
-                });
-            });
+        }
+
+        if (interaction.customId.startsWith('order')) {
+            axios
+                .get(
+                    `${medusa.baseUrl}/store/orders/${interaction.values[0]}`
+                )
+                .then((res) => {
+                    let order = res.data.order;
+                    let date = new Date(order.created_at);
+
+                    let embed = new EmbedBuilder()
+                        .setTitle(`Order ${order.id}`)
+                        .setDescription(
+                            `Status: ${order.status}\n${order.items
+                                .map((item) => {
+                                    return `**${item.title}** - ${item.quantity}x\n`;
+                                })
+                                .join('')}`
+                        )
+                        .addFields(
+                            {
+                                name: 'Order ID',
+                                value: order.id,
+                                inline: true,
+                            },
+                            {
+                                name: 'Purchase date',
+                                value: `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Shipping address',
+                                value: `${order.shipping_address.address_1} ${order.shipping_address.address_2} ${order.shipping_address.postal_code}\n${order.shipping_address.city} :flag_${order.shipping_address.country_code}:`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Subtotal',
+                                value: `${order.subtotal / 100} ${order.currency_code}`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Shipping price',
+                                value: `${order.shipping_price / 100} ${order.currency_code}`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Total',
+                                value: `${order.total / 100} ${order.currency_code}`,
+                                inline: true,
+                            }
+                        )
+                        .setColor(0x00ae86);
+
+                    interaction.reply({
+                        embeds: [embed],
+                        ephemeral: true,
+                    });
+                })
+        }
     }
 
     const {commandName} = interaction;
@@ -380,27 +441,37 @@ client.on('interactionCreate', async (interaction) => {
                                 .get(`${medusa.baseUrl}/store/auth`, axiosCfg)
                                 .then((res) => {
                                     let orders = res.data.customer.orders;
-                                    if (!orders) {
+                                    if (!orders.length) {
                                         interaction.reply({
                                             content: 'You have no orders.',
                                             ephemeral: true,
                                         });
                                     } else {
-                                        let embed = new EmbedBuilder()
-                                            .setTitle('Your Orders')
-                                            .setDescription(
-                                                `You have ${orders.length} orders.\n\n${orders
-                                                    .map((order) => {
-                                                        return `**${order.id}** - ${order.status}\n`;
-                                                    })
-                                                    .join('')}`
-                                            )
-                                            .setColor(0x00ae86);
 
-                                        interaction.reply({
-                                            embeds: [embed],
-                                            ephemeral: true,
-                                        });
+                                        let options = [];
+                                        let i = 0;
+                                        while (i < orders.length) {
+                                            options[i] = {
+                                                label: `${orders[i].id}`,
+                                                description: `${orders[i].status}`,
+                                                value: `${orders[i].id}`,
+                                            }
+
+                                            i++
+                                            if (i == orders.length) {
+                                                const row = new ActionRowBuilder()
+                                                    .addComponents(
+                                                        new SelectMenuBuilder()
+                                                            .setCustomId('orders_sm')
+                                                            .setPlaceholder('List of orders')
+                                                            .addOptions(options)
+                                                    );
+                                                interaction.reply({
+                                                    components: [row],
+                                                    ephemeral: true
+                                                })
+                                            }
+                                        }
                                     }
                                 })
                                 .catch((err) => {
