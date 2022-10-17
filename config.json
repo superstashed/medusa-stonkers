@@ -1,26 +1,29 @@
 {
-    "clearConsole": true,
-    "discord": {
-        "token": "your discord token",
-        "clientId": "your discord bot id",
-        "guildId": "your discord guild id",
-        "presence": {
-            "status": "dnd",
-            "activity": {
-                "enabled": true,
-                "type": "products"
-            }
-        },
-        "saveTickets": true
+  "clearConsole": true,
+  "discord": {
+    "token": "your discord token",
+    "clientId": "your discord bot id",
+    "guildId": "your discord guild id",
+    "presence": {
+      "status": "dnd",
+      "activity": {
+        "enabled": true,
+        "type": "products"
+      }
     },
-    "medusa": {
-        "maxRetries": 3,
-        "baseUrl": "http://localhost:9000"
-    },
-    "mysql": {
-        "host": "localhost",
-        "user": "root",
-        "password": "root",
-        "database": "discord"
+    "saveTickets": true,
+    "announcements": {
+      "enabled": true,
+      "channelId": "900000833326948353"
     }
+  },
+  "medusa": {
+    "baseUrl": "http://localhost:9000"
+  },
+  "mysql": {
+    "host": "localhost",
+    "user": "root",
+    "password": "root",
+    "database": "discord"
+  }
 }
