@@ -7,6 +7,7 @@ const {
     ActionRowBuilder,
     ButtonBuilder,
     SelectMenuBuilder,
+    ModalBuilder,
 } = require('discord.js');
 const axios = require('axios');
 
