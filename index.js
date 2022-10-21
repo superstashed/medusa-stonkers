@@ -9,7 +9,9 @@ const {
     SelectMenuBuilder,
     ModalBuilder,
 } = require('discord.js');
+
 const axios = require('axios');
+const express = require('express')
 
 const {
     clearConsole,
@@ -19,6 +21,7 @@ const {
 } = require('./config.json');
 
 const client = new Client({intents: [GatewayIntentBits.Guilds]});
+var listener;
 
 const database = require('mysql');
 const connection = database.createPool({
@@ -31,7 +34,6 @@ const connection = database.createPool({
 
 client.once('ready', () => {
     if (clearConsole) console.clear();
-
     console.log('Successfully logged in (Discord)');
     if (discord.presence.activity.enabled) {
         axios
@@ -54,6 +56,16 @@ client.once('ready', () => {
                     `\n\nFailed to get products from Medusa, are you sure the baseUrl is correct?`
                 );
             });
+    }
+    if (discord.announcements.enabled) {
+        listener = express()
+        listener.listen(2748, () => {
+            console.log("App successfully listening on port 2748")
+        });
+
+        listener.get('/', (req, res) => {
+            res.send('Hello, world!')
+        })
     }
 });
 
