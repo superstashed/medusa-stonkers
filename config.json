@@ -13,8 +13,13 @@
     },
     "saveTickets": true,
     "announcements": {
-      "enabled": true,
-      "channelId": "900000833326948353"
+      "enabled": false,
+      "channelId": "your new products channel id",
+      "pluginToken": "token",
+      "cheesyMessage": true,
+      "cheesyMessages": [
+        "Is it a bird? Is it a plane? No! They're the new "
+      ]
     }
   },
   "medusa": {
