@@ -57,3 +57,4 @@ node .
 
 ## Notes
 - If you'd like to save tickets (change it in config.json) make sure you have enabled the "Message Content" Intent in your Discord Developer Portal under the "Bot" category
+- [my website :)](https://stefa-n.xyz/stonkers)
