@@ -13,9 +13,9 @@ Campake - [@penktastal](https://github.com/penktastal)
 
 Stonkers brings shop owners closer to their customers by providing an integration between Discord & Medusajs 
 
-### Preview (OUTDATED CURRENTLY)
+### Preview
+[my website hosts all showcases](https://stefa-n.xyz/stonkers)
 
-![Demo](https://get.sares.cf/images/96sgw-655105806634582046.gif)
 
 ## Set up Project
 
@@ -35,7 +35,7 @@ git clone https://github.com/superstashed/medusa-stonkers
 2. Configuration:
 Change the configuration to your liking.
 
-3. Create a MySQL table with: 
+3. Create a MySQL table called discord with: 
 * column called discord of type BIGINT
 * column called cookie of type TEXT
 
@@ -57,4 +57,3 @@ node .
 
 ## Notes
 - If you'd like to save tickets (change it in config.json) make sure you have enabled the "Message Content" Intent in your Discord Developer Portal under the "Bot" category
-- [my website :)](https://stefa-n.xyz/stonkers)
