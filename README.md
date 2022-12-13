@@ -14,8 +14,9 @@ Campake - [@penktastal](https://github.com/penktastal)
 Stonkers brings shop owners closer to their customers by providing an integration between Discord & Medusajs 
 
 ### Preview
-[my website hosts all showcases](https://stefa-n.xyz/stonkers)
-
+#### https://twitter.com/stef4n24/status/1577641389797564417
+#### https://twitter.com/stef4n24/status/1578824627161559040
+#### https://twitter.com/stef4n24/status/1580976701764354048
 
 ## Set up Project
 
